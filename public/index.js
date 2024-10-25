@@ -1,7 +1,6 @@
 const signUpForm = document.getElementById("sign-up-form");
 const errorMsg = document.getElementById('error');
-let users = [];
-const port = 3450;
+const port = 3000;
 
 signUpForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -10,35 +9,48 @@ signUpForm.addEventListener('submit', async (event) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
+    // Simple validation
+    if (!username || !email || !password) {
+        errorMsg.textContent = 'All fields are required. Please fill out the form completely.';
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        errorMsg.textContent = 'Please enter a valid email address.';
+        return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+        errorMsg.textContent = 'Password should be at least 6 characters long.';
+        return;
+    }
+
     try {
-        // Use axios to send a POST request
-        const response = await axios.post(`http://localhost:${port}/user/signup`, { username, email, password });
+        // Send the request
+        const response = await axios.post(`http://localhost:${port}/user/signup`, {
+            username,
+            email,
+            password
+        });
 
         // Handle successful response
-        users.push(response.data);  // Add the new user to the users array
+        console.log('User signed up successfully:', response.data);
+        signUpForm.reset(); // Clear form fields
+        errorMsg.textContent = ''; // Clear error message
 
-        // Clear the form inputs
-        document.getElementById('username').value = "";
-        document.getElementById('email').value = "";
-        document.getElementById('password').value = "";
-
-        // Clear any error messages
-        errorMsg.textContent = '';
     } catch (error) {
+        // Handle errors from the server response
         if (error.response) {
-            // Handle errors from the server response
-            if (error.response.status === 409 || error.response.status === 404) {
-                document.getElementById('email').value = "";
-                document.getElementById('password').value = "";
-                errorMsg.textContent = `Error: ${error.response.data.message}`;
+            if (error.response.status === 400) {
+                errorMsg.textContent = 'Bad Request: Please ensure all fields are correctly filled.';
             } else {
-                console.log('Unexpected error: ', error.response.data);
-                errorMsg.textContent = 'An unexpected error occurred.';
+                errorMsg.textContent = `Error: ${error.response.data.message || 'An error occurred.'}`;
             }
         } else {
-            // Handle network errors or other unexpected issues
-            console.log('Error adding user: ', error);
-            errorMsg.textContent = 'An error occurred. Please try again.';
+            errorMsg.textContent = 'Network error. Please try again.';
         }
     }
 });
