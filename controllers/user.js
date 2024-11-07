@@ -1,39 +1,38 @@
 const bcrypt = require('bcryptjs');
-const Users = require('../models/user');
-
-function isPasswordValid(str) {
-    const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z0-9]{8,20}$/; // Alphanumeric with at least one lowercase, one uppercase, one digit
-    return typeof str === 'string' && pattern.test(str);
-}
+const User = require('../models/user');
 
 exports.postAddUsers = async (req, res) => {
-    const { username, email, password } = req.body; 
-    console.log('Received Data:', req.body);
-    
+    const { username, email, password } = req.body;
     try {
-        // Check if the user already exists
-        const existingUser = await Users.findOne({ where: { email } });
+        const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(409).json({ message: 'A user with the same email already exists.' });
         }
 
-        // Validate password (assuming this is defined in your code)
-        if (!isPasswordValid(password)) {
-            return res.status(400).json({ message: 'Password does not meet criteria.' });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await User.create({ username, email, password: hashedPassword });
+
+        return res.status(201).json({ message: 'User registered successfully.' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.postLogin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        // Hash the password and create the new user
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await Users.create({ username, email, password: hashedPassword });
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(401).json({ message: 'Incorrect password' });
+        }
 
-        return res.status(201).json({
-            message: 'User registered successfully.',
-            user: {
-                id: newUser.id,
-                username: newUser.username,
-                email: newUser.email,
-            },
-        });
+        return res.status(200).json({ message: 'Login successful' });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
