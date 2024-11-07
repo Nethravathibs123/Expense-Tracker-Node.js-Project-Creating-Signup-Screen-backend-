@@ -18,7 +18,15 @@ signUpForm.addEventListener('submit', async(event) => {
         document.getElementById('username').value = "";
         document.getElementById('email').value = "";
         document.getElementById('password').value = "";
+        const data = await response.json();
 
+        if (response.status === 201) {
+            document.getElementById('message').textContent = 'User registered successfully.';
+        } else if (response.status === 409) {
+            document.getElementById('message').textContent = 'User already exists.';
+        } else {
+            document.getElementById('message').textContent = 'An error occurred.';
+        }
         errorMsg.textContent = '';
     }
     catch(error) {
