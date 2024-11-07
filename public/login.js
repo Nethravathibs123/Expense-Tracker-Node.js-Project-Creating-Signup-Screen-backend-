@@ -1,28 +1,21 @@
-
 const loginForm = document.getElementById("login-form");
-
 const errorMsg = document.getElementById('error');
-
 let login = [];
 
-
-
-loginForm.addEventListener('submit', async(event) => {
+loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-  
-    try{
-        const response = await axios.post(`http://localhost:3000/user/login`,{email, password});
+
+    try {
+        const response = await axios.post(`http://localhost:3000/user/login`, { email, password });
         console.log(response);
 
         document.getElementById('email').value = "";
         document.getElementById('password').value = "";
 
         errorMsg.textContent = 'Login-Successfully';
-    }
-    catch(error) {
-        document.getElementById('username').value = "";
+    } catch (error) {
         document.getElementById('email').value = "";
         document.getElementById('password').value = "";
         

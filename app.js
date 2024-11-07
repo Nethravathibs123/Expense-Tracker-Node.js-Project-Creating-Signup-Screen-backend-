@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 });
 const port = 3000;
 
-Users.sync();
+
 sequelize
 .sync()
 .then((result) => {
